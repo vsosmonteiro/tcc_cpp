@@ -90,13 +90,13 @@ int main() {
         obj.end();
 
         /* (1) At least one node per cluster */
-        for (int k = 0; k < inst.C; k++) {
-            IloExpr expr(env);
-            for (int v : inst.clusters[k])
-                expr += x[v];
-            model.add(expr >= 1);
-            expr.end();
-        }
+        // for (int k = 0; k < inst.C; k++) {
+        //     IloExpr expr(env);
+        //     for (int v : inst.clusters[k])
+        //         expr += x[v];
+        //     model.add(expr >= 1);
+        //     expr.end();
+        // }
 
         /* (2) Minimum prize per cluster */
         for (int k = 0; k < inst.C; k++) {
