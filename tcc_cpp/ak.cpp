@@ -328,9 +328,19 @@ void sort_adjacency_list(int N) {
         });
     }
 }
+void addWeightToEmptyClusters(PCInstance &inst) {
+    for (int c = 0; c < inst.C; c++) {
+        if (inst.min_prize_by_cluster[c] == 0) {
+            inst.min_prize_by_cluster[c] = 1;
+            int vertice=inst.clusters[c][0];
+            inst.prizes[vertice]=1;
+        }
+    }
+}
 
 int main() {
     auto inst = read_pcinstance();
+    addWeightToEmptyClusters(inst);
     START_TIME = std::chrono::steady_clock::now();
     
     preprocess(inst);
