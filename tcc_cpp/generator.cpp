@@ -15,7 +15,8 @@ namespace fs = std::filesystem;
 /* =========================
    Random helper
    ========================= */
-int uniform_int(int l, int r, mt19937_64& rng) {
+int uniform_int(int l, int r, mt19937_64 &rng)
+{
     uniform_int_distribution<int> dist(l, r);
     return dist(rng);
 }
@@ -23,24 +24,27 @@ int uniform_int(int l, int r, mt19937_64& rng) {
 /* =========================
    Process ONE file safely
    ========================= */
-void process_file(const fs::path& input_path,
-                  const fs::path& output_path)
+void process_file(const fs::path &input_path,
+                  const fs::path &output_path)
 {
     ifstream in(input_path);
-    if (!in.is_open()) {
+    if (!in.is_open())
+    {
         cerr << "Skipping (cannot open): " << input_path << "\n";
         return;
     }
 
     ofstream out(output_path);
-    if (!out.is_open()) {
+    if (!out.is_open())
+    {
         cerr << "Cannot write to: " << output_path << "\n";
         return;
     }
 
     mt19937_64 rng(42);
 
-    try {
+    try
+    {
         /* ===== 1. Read N ===== */
         int N;
         if (!(in >> N) || N <= 0 || N > 100000)
@@ -48,8 +52,9 @@ void process_file(const fs::path& input_path,
 
         out << N << "\n";
 
-        vector<pair<int,int>> coords(N);
-        for (int i = 0; i < N; i++) {
+        vector<pair<int, int>> coords(N);
+        for (int i = 0; i < N; i++)
+        {
             if (!(in >> coords[i].first >> coords[i].second))
                 throw runtime_error("Invalid coordinates");
             out << coords[i].first << " " << coords[i].second << "\n";
@@ -65,7 +70,8 @@ void process_file(const fs::path& input_path,
         vector<vector<int>> clusters(C);
         vector<int> cluster_of(N, -1);
 
-        for (int c = 0; c < C; c++) {
+        for (int c = 0; c < C; c++)
+        {
             int sz;
             if (!(in >> sz) || sz <= 0)
                 throw runtime_error("Invalid cluster size");
@@ -73,7 +79,8 @@ void process_file(const fs::path& input_path,
             out << sz;
             clusters[c].resize(sz);
 
-            for (int i = 0; i < sz; i++) {
+            for (int i = 0; i < sz; i++)
+            {
                 int v;
                 if (!(in >> v))
                     throw runtime_error("Invalid cluster node");
@@ -91,7 +98,8 @@ void process_file(const fs::path& input_path,
 
         /* ===== 3. Centers ===== */
         vector<int> centers(C);
-        for (int c = 0; c < C; c++) {
+        for (int c = 0; c < C; c++)
+        {
             if (!(in >> centers[c]))
                 throw runtime_error("Invalid center");
             out << centers[c] << "\n";
@@ -106,7 +114,8 @@ void process_file(const fs::path& input_path,
 
         /* ===== 5. Prizes ===== */
         vector<int> prizes(N);
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < N; i++)
+        {
             if (!(in >> prizes[i]))
                 throw runtime_error("Invalid prize");
             out << prizes[i] << "\n";
@@ -120,11 +129,13 @@ void process_file(const fs::path& input_path,
 
         /* ===== 7. Compute min prizes ===== */
         vector<int> min_prize(C);
-        for (int c = 0; c < C; c++) {
+        for (int c = 0; c < C; c++)
+        {
             int sumP = 0;
             int minP = INT_MAX;
 
-            for (int v : clusters[c]) {
+            for (int v : clusters[c])
+            {
                 sumP += prizes[v];
                 minP = min(minP, prizes[v]);
             }
@@ -133,7 +144,8 @@ void process_file(const fs::path& input_path,
         }
 
         /* ===== 8. Append min prizes ===== */
-        for (int c = 0; c < C; c++) {
+        for (int c = 0; c < C; c++)
+        {
             out << min_prize[c] << "\n";
         }
     }
@@ -147,9 +159,10 @@ void process_file(const fs::path& input_path,
 /* =========================
    MAIN
    ========================= */
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-    if (argc != 3) {
+    if (argc != 3)
+    {
         cerr << "Usage: " << argv[0]
              << " <input_folder> <output_folder>\n";
         return 1;
@@ -158,16 +171,19 @@ int main(int argc, char* argv[])
     fs::path input_dir(argv[1]);
     fs::path output_dir(argv[2]);
 
-    if (!fs::exists(input_dir) || !fs::is_directory(input_dir)) {
+    if (!fs::exists(input_dir) || !fs::is_directory(input_dir))
+    {
         cerr << "Input folder does not exist.\n";
         return 1;
     }
 
-    if (!fs::exists(output_dir)) {
+    if (!fs::exists(output_dir))
+    {
         fs::create_directories(output_dir);
     }
 
-    for (const auto& entry : fs::directory_iterator(input_dir)) {
+    for (const auto &entry : fs::directory_iterator(input_dir))
+    {
         if (!entry.is_regular_file())
             continue;
 
@@ -176,8 +192,8 @@ int main(int argc, char* argv[])
         if (!name.empty() && name[0] == '.')
             continue;
 
-        fs::path out_path = output_dir / entry.path().filename();
-    
+        fs::path out_path = output_dir / entry.path().filename(); 
+        
 
         cout << "Processing: " << entry.path().filename() << "\n";
         process_file(entry.path(), out_path);

@@ -56,7 +56,7 @@ int eliminate_bottleneck_edges(PCInstance& inst, const std::vector<std::vector<i
         // Itera sobre todos os clusters 'c'
         for (int c = 0; c < C; ++c) {
             // Se u ou v pertencem ao cluster c, pula o cluster
-            if ((inst.cluster_by_node[u] == c || inst.cluster_by_node[v] == c) && false) {
+            if ((inst.cluster_by_node[u] == c || inst.cluster_by_node[v] == c)) {
                 continue;
             }
 
