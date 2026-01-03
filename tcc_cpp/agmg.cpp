@@ -2,9 +2,19 @@
 #include <iostream>
 #include <set>
 #include <iomanip>
+#include <chrono>
 #include "model.hpp"
 #include "reader.hpp"
 #include "preprocess.hpp"
+
+static const double TIME_LIMIT = 60.0; // seconds
+std::chrono::steady_clock::time_point START_TIME;
+
+inline bool time_limit_reached() {
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed = now - START_TIME;
+    return elapsed.count() >= TIME_LIMIT;
+}
 
 struct dsu {
 	std::vector<int> id, sz;
@@ -19,6 +29,20 @@ struct dsu {
 		if (sz[a] < sz[b]) std::swap(a, b);
 		sz[a] += sz[b], id[b] = a;
 	}
+    bool unite(int a, int b) {
+        a = find(a);
+        b = find(b);
+
+        if (a == b)
+            return false; // cycle detected
+
+        if (sz[a] < sz[b])
+            std::swap(a, b);
+
+        id[b] = a;
+        sz[a] += sz[b];
+        return true;
+    }
 };
 
 std::pair<int, std::vector<Edge>> mst(PCInstance& inst, std::vector<int> subgraph) {
@@ -65,6 +89,22 @@ int calc_solution_cost(PCInstance& inst, std::vector<int>& subgraph) {
         total_prize += inst.prizes[node];
     }
     return mst_weight;
+}
+
+bool has_cycle(int num_vertices, const std::vector<Edge>& selected_edges) {
+
+    dsu uf(num_vertices);
+
+    for (const Edge& e : selected_edges) {
+        if (!uf.unite(e.u, e.v)) {
+            std::cout << "❌ Cycle detected when adding edge: "
+                      << e.u << " - " << e.v
+                      << " (weight = " << e.weight << ")\n";
+            return true;
+        }
+    }
+
+    return false;
 }
 
 int local_search(PCInstance& inst, std::vector<int>& current_subgraph, int current_cost) {
@@ -172,15 +212,17 @@ void ils(PCInstance& inst) {
     int perturb = std::min(lim_p, 4);
     int current_cost = calc_solution_cost(inst, current_subgraph);
     int best_cost = current_cost;
+    int iter=0;
 
-    for (int iteration = 0; iteration < max_iterations; iteration++) {
+    while (!time_limit_reached()) {
+        iter+=1;
 
-        local_search(inst, current_subgraph, current_cost);
+        current_cost = local_search(inst, current_subgraph, current_cost);
 
         if (current_cost < best_cost) {
             best_cost = current_cost;
             best_subgraph = current_subgraph;
-            std::cout << "Nova melhor solucao na iter " << iteration << ": " << best_cost << "\n";
+            // std::cout << "Nova melhor solucao na iter " << iteration << ": " << best_cost << "\n";
         }
 
         // 3. Perturbação (Kick) para escapar de mínimos locais
@@ -211,7 +253,44 @@ void ils(PCInstance& inst) {
         current_subgraph = next_subgraph;
         current_cost = calc_solution_cost(inst, current_subgraph);
     }
+    for (int u : best_subgraph) {
+        std::cout<<"Selected vertice " << u << " \n";
+    }
+    std::vector<Edge> edges_in_mst= mst(inst, best_subgraph).second;
+    int cost_mst = 0;
+    for (auto e : edges_in_mst) cost_mst += e.weight;
+    for (Edge e : edges_in_mst) {
+        std::cout<<"Selected edge " << e.u << " " << e.v << " " << e.weight << "\n";
+    }
+    std::cout << edges_in_mst.size() << " edges in MST\n";
+    std::cout << best_subgraph.size() << " vertices selected\n";
+    if(has_cycle(inst.N, edges_in_mst)){
+        std::cout << "❌ Cycle detected in the MST!\n";
+    }
+    else {
+        std::cout << "✅ No cycles in the MST.\n";
+    }
+    std::vector<int> prizes_mst(inst.C, 0);
+    for (int u : best_subgraph) {
+        int cluster = inst.cluster_by_node[u];
+        prizes_mst[cluster] += inst.prizes[u];
+    }
+    for (int c = 0; c < inst.C; c++)
+    {
+        if(prizes_mst[c] < inst.min_prize_by_cluster[c]) {
+            std::cout << "❌ Prize constraint violated in cluster " << c 
+                      << ": required " << inst.min_prize_by_cluster[c]
+                      << ", got " << prizes_mst[c] << "\n";
+        } else {
+            std::cout << "✅ Cluster " << c 
+                      << " meets prize requirement: required " << inst.min_prize_by_cluster[c]
+                      << ", got " << prizes_mst[c] << "\n";
+        }
+    }
     
+    std::cout << "Custo da MST na melhor solução: " << cost_mst << "\n";
+    std::cout << "Melhor custo encontrado: " << best_cost << "\n";
+    std::cout << "iter count " << iter << " iterations:\n";
 
 
 }
@@ -219,8 +298,8 @@ void ils(PCInstance& inst) {
 
 
 int main() {
-    allowIntra = false;
     auto inst = read_pcinstance();
+    START_TIME = std::chrono::steady_clock::now();
     std::cout << inst.edges.size() << "\n";
     preprocess(inst);
     ils(inst);
