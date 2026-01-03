@@ -11,7 +11,6 @@ using namespace std;
 const int SEED = 1;
 
 mt19937_64 rng(SEED);
-bool allowIntra = false;
 
 int uniform(int l, int r)
 {
@@ -80,8 +79,8 @@ PCInstance read_pcinstance()
     {
         for (int j = i + 1; j < inst.N; j++)
         {
-            if (inst.cluster_by_node[i] == inst.cluster_by_node[j] && !allowIntra)
-                continue;
+            // if (inst.cluster_by_node[i] == inst.cluster_by_node[j] )
+            //     continue;
 
             double dx = inst.coords[i].first - inst.coords[j].first;
             double dy = inst.coords[i].second - inst.coords[j].second;
