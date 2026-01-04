@@ -374,8 +374,11 @@ int main(int argc, char **argv)
         }
 
         IloCplex cplex(model);
+        std::ofstream logfile("logs/" + instanceName + ".log");
+        cplex.setOut(logfile);
+        cplex.setWarning(logfile);
+        cplex.setError(logfile);
         cplex.setParam(IloCplex::Param::Threads, 0);
-        cplex.setParam(IloCplex::Param::TimeLimit, 3600.0);
 
         int n_cut = 0;
         cplex.use(CB_SubCicloUF(env, x, y, &n_cut));
@@ -395,7 +398,7 @@ int main(int argc, char **argv)
 
             saveResultCSV(instanceName,
                           cplex.getObjValue(),
-                            runtime_sec,
+                          runtime_sec,
                           cplex,
                           x,
                           y);

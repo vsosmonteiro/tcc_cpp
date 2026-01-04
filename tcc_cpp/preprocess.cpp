@@ -34,7 +34,7 @@ std::vector<std::vector<int>> build_weight_matrix(const PCInstance& inst) {
 // }
     return weight_matrix;
 }
-int eliminate_bottleneck_edges(PCInstance& inst, const std::vector<std::vector<int>>& weights) {
+int eliminate_bottleneck_edges(PCInstance& inst,  std::vector<std::vector<int>>& weights) {
     int N = inst.N;
     int C = inst.C;
     int eliminated_count = 0;
@@ -56,9 +56,9 @@ int eliminate_bottleneck_edges(PCInstance& inst, const std::vector<std::vector<i
         // Itera sobre todos os clusters 'c'
         for (int c = 0; c < C; ++c) {
             // Se u ou v pertencem ao cluster c, pula o cluster
-            if ((inst.cluster_by_node[u] == c || inst.cluster_by_node[v] == c)) {
-                continue;
-            }
+            // if ((inst.cluster_by_node[u] == c || inst.cluster_by_node[v] == c)) {
+            //     continue;
+            // }
 
             bool cluster_test_passed = true;
             
@@ -86,6 +86,8 @@ int eliminate_bottleneck_edges(PCInstance& inst, const std::vector<std::vector<i
             if (cluster_test_passed) {
                 // Se o teste passou para PELO MENOS UM cluster 'c', a aresta é um gargalo e deve ser removida.
                 is_bottleneck = true;
+                weights[u][v] = INF; // Atualiza a matriz de pesos para refletir a remoção
+                weights[v][u] = INF;
                 break; // Não precisa testar outros clusters
             }
         }
